@@ -6,14 +6,47 @@ cap= cv2.VideoCapture(0)
 
 mpHands= mp.solutions.hands
 hands= mpHands.Hands() #We will go with the default values 
+mpDraw= mp.solutions.drawing_utils
+
+pTime =0
+cTime =0
+
 
 while True:
 
     #For running the web cam
     success, img = cap.read()
-    imgRGB= cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    results= hands.process(imgRGB)  #process the image 
-    print(results.multi_hand_landmarks)  #check whetehr we detect something
 
-    cv2.imshow("Image", img)
-    cv2.waitKey(1)
+    if img is not None and img.shape[0] > 0 and img.shape[1] > 0:
+        imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # imgRGB= cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        results= hands.process(imgRGB)  #process the image 
+        # print(results.multi_hand_landmarks)  #check whetehr we detect something
+
+        if results.multi_hand_landmarks:
+            for handLms in results.multi_hand_landmarks: #Go through each hand
+                for id, lm in enumerate(handLms.landmark): #exact index number of our 
+                    # print(id,lm)
+                    h, w, c= img.shape #taking the height, width and the channel
+                    cx, cy = int(lm.x * w), int(lm.y * h)  #it's not for a specifc one
+                    print(id, cx, cy)
+
+                    if id==4: #id==0 :- palm, id==4 :- finger tip thumb
+                        cv2.circle(img, (cx, cy), 25, (255,0,255), cv2.FILLED)
+
+                #To draw all points
+                mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)  #original image
+
+
+        cTime= time.time()
+        fps= 1/(cTime-pTime)
+        pTime= cTime
+
+        cv2.putText(img, str(int(fps)), (10,70), cv2.FONT_HERSHEY_PLAIN,3,(255,0,255),3)
+        cv2.imshow("Image", img)
+        cv2.waitKey(1)
+
+
+
+def main():
+    
